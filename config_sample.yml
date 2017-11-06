@@ -1,0 +1,5 @@
+key-file: 'gcp-key-file'
+project: 'gcp-project-name'
+bucket: 'bucket-name'
+dst: 'path to blob'
+figure-uri: 'path to figure'
