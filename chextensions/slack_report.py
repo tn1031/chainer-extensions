@@ -33,18 +33,19 @@ def _slack_report(trainer, keys, hook, channel, config_path):
         {'pretext': model_name, 'color': color, 'fields': fields})
 
     if config_path is not None:
-        config = yaml.load(open(config_path))
-        client = storage.Client.from_service_account_json(
-            config['key-file'], project=config['project'])
-        bucket = client.get_bucket(config['bucket'])
-
         plot_reports = [v.extension for k, v in trainer._extensions.items() if 'PlotReport' in k]
         if len(plot_reports) > 0:
+            config = yaml.load(open(config_path))
+            client = storage.Client.from_service_account_json(
+                config['key-file'], project=config['project'])
+            bucket = client.get_bucket(config['bucket'])
+
             for pr in plot_reports:
                 name = pr._file_name
-                url = _upload_figure(name, trainer.out, bucket, config['figure-uri'])
-                attachments.append(
-                    {'color': color, 'image_url': url, 'fields': [{'value': name}]})
+                if os.path.isfile(os.path.join(trainer.out, name)):
+                    url = _upload_figure(name, trainer.out, bucket, config['figure-uri'])
+                    attachments.append(
+                        {'color': color, 'image_url': url, 'fields': [{'value': name}]})
 
     slack.notify(channel=channel,
         text='Training Report from %s' % os.uname()[1],
