@@ -5,8 +5,7 @@ setup(
         version='0.1.0',
         packages=['chextensions'],
         install_requires=[
-            'chainer==2.0.2',
-            'google-cloud==0.27.0',
+            'google-cloud',
             'PyYAML',
             'slackweb'],
         )
