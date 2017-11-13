@@ -16,8 +16,8 @@ import chainer.links as L
 from chainer import training
 from chainer.training import extensions
 
-from slack_report import slack_report
-from snapshot_transfer import snapshot_transfer
+from chextensions import slack_report
+from chextensions import snapshot_transfer
 
 # Network definition
 class MLP(chainer.Chain):

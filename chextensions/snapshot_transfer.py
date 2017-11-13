@@ -36,8 +36,10 @@ def _snapshot_transfer(trainer, keys, config_path):
 
         dst = os.path.join(config['dst'], os.uname()[1], os.path.basename(out_tar))
         blob = bucket.blob(dst)
-        blob.upload_from_filename(out_tar)
-
+        try:
+            blob.upload_from_filename(out_tar)
+        except Exception as e:
+            print(e)
         os.remove(out_tar)
 
 

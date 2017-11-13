@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import hashlib
 import os
 import slackweb
@@ -5,14 +7,14 @@ import yaml
 from google.cloud import storage
 from chainer.training import extension
 
-def slack_report(keys, hook, channel, config_path=None):
+def slack_report(keys, hook, channel, mention=None, config_path=None):
     @extension.make_extension(trigger=(1, 'epoch'), priority=0)
     def slack_report(trainer):
-        _slack_report(trainer, keys, hook, channel, config_path)
+        _slack_report(trainer, keys, hook, channel, mention, config_path)
 
     return slack_report
 
-def _slack_report(trainer, keys, hook, channel, config_path):
+def _slack_report(trainer, keys, hook, channel, mention, config_path):
     slack = slackweb.Slack(url=hook)
     updater = trainer.updater
     model_name = updater._optimizers['main'].target.__class__.__name__
@@ -25,10 +27,11 @@ def _slack_report(trainer, keys, hook, channel, config_path):
     color = 'good'
     for k in keys:
         if k in current_log:
-            fields.append({'title': k, 'value': current_log[k], 'short': True})
-            if not (isinstance(current_log[k], float) or isinstance(current_log[k], int)):
+            value = str(current_log[k])
+            fields.append({'title': k, 'value': value, 'short': True})
+            if not value.replace('.', '').isdigit():
                 color = 'danger'
-                # mention
+
     attachments.append(
         {'pretext': model_name, 'color': color, 'fields': fields})
 
@@ -47,9 +50,18 @@ def _slack_report(trainer, keys, hook, channel, config_path):
                     attachments.append(
                         {'color': color, 'image_url': url, 'fields': [{'value': name}]})
 
-    slack.notify(channel=channel,
-        text='Training Report from %s' % os.uname()[1],
-        attachments=attachments)
+    if color == 'danger' and mention is not None:
+        text = '<@%s> An error occured in %s' % (mention, os.uname()[1])
+    else:
+        text = 'Training Report from %s' % os.uname()[1]
+
+    try:
+        slack.notify(channel=channel,
+            text=text,
+            attachments=attachments)
+    except Exception as e:
+        print(e)
+
 
 def _upload_figure(name, out, bucket, figure_uri):
     path = os.path.join(out, name)
