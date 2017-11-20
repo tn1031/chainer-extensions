@@ -25,9 +25,19 @@ def _slack_report(trainer, keys, hook, channel, mention, config_path):
     color = 'good'
     for k in keys:
         if k in current_log:
-            value = str(current_log[k])
+            value = current_log[k]
             fields.append({'title': k, 'value': value, 'short': True})
-            if not value.replace('.', '').isdigit():
+            try:
+                value = float(value)
+                if value != value:
+                    valuecheck = False
+                elif abs(value) == float('Inf'):
+                    valuecheck = False
+                else:
+                    valuecheck = True
+            except:
+                valuecheck = False
+            if not valuecheck:
                 color = 'danger'
 
     attachments.append(
